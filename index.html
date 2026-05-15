@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="grain"></div>
+
+  <main>
+    <header>
+      <span class="logo">ALPWRK'S QR</span>
+      <span class="tagline">encode anything</span>
+    </header>
+
+    <section class="input-section">
+      <div class="input-wrap">
+        <textarea id="input" placeholder="URL, text, anything..." spellcheck="false" rows="4"></textarea>
+        <div class="input-meta">
+          <span id="char-count">0</span>
+          <button id="clear-btn" title="Clear">✕</button>
+        </div>
+      </div>
+
+      <div class="options">
+        <div class="option-group">
+          <label>Size</label>
+          <div class="segmented" id="size-select">
+            <button class="seg-btn" data-value="128">S</button>
+            <button class="seg-btn active" data-value="256">M</button>
+            <button class="seg-btn" data-value="512">L</button>
+          </div>
+        </div>
+        <div class="option-group">
+          <label>Error</label>
+          <div class="segmented" id="ec-select">
+            <button class="seg-btn active" data-value="L">L</button>
+            <button class="seg-btn" data-value="M">M</button>
+            <button class="seg-btn" data-value="Q">Q</button>
+            <button class="seg-btn" data-value="H">H</button>
+          </div>
+        </div>
+        <div class="option-group">
+          <label>Color</label>
+          <div class="color-pair">
+            <label class="color-swatch" title="Foreground">
+              <input type="color" id="color-dark" value="#e8e8e8">
+              <span>FG</span>
+            </label>
+            <label class="color-swatch" title="Background">
+              <input type="color" id="color-light" value="#0c0c0c">
+              <span>BG</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button id="generate-btn">Generate</button>
+    </section>
+
+    <section class="output-section" id="output-section">
+      <div class="qr-frame" id="qr-frame">
+        <div id="qr-canvas"></div>
+      </div>
+      <div class="actions" id="actions">
+        <button class="action-btn" id="download-png">PNG</button>
+        <button class="action-btn" id="download-svg">SVG</button>
+        <button class="action-btn" id="copy-btn">Copy</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
