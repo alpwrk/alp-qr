@@ -132,15 +132,16 @@ textarea::placeholder { color: var(--muted); }
 }
 
 .input-meta {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
   padding: 6px 12px 10px;
   color: var(--muted);
   font-size: 11px;
 }
 
-#clear-btn { justify-self: end; }
+#clear-btn { margin-left: auto; }
+
+#char-count { transition: transform .4s cubic-bezier(0.4, 0, 0.2, 1); }
 
 .meta-left {
   display: flex;

@@ -56,6 +56,7 @@ clearBtn.addEventListener('click', () => {
   imgPreview.hidden = true;
   imgPreview.src = '';
   setStatus('');
+  resetCharCount();
   input.focus();
 });
 
@@ -246,7 +247,19 @@ function applyImage(qrText, previewSrc) {
     b.classList.toggle('active', b.dataset.value === 'L');
   });
   state.ec = 'L';
+  requestAnimationFrame(centerCharCount);
   generate();
+}
+
+function centerCharCount() {
+  const metaRect = document.querySelector('.input-meta').getBoundingClientRect();
+  const countRect = charCount.getBoundingClientRect();
+  const offset = (metaRect.left + metaRect.width / 2) - (countRect.left + countRect.width / 2);
+  charCount.style.transform = `translateX(${offset}px)`;
+}
+
+function resetCharCount() {
+  charCount.style.transform = '';
 }
 
 function compressToDataUrl(img) {
