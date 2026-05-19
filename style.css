@@ -119,6 +119,7 @@ textarea::placeholder { color: var(--muted); }
 .input-wrap.drag-over { border-color: var(--accent); border-style: dashed; }
 .input-wrap.drag-over .drop-hint { opacity: 1; }
 
+
 @keyframes border-spin {
   to { --angle: 360deg; }
 }

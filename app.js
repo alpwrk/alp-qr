@@ -57,6 +57,7 @@ clearBtn.addEventListener('click', () => {
   imgPreview.src = '';
   setStatus('');
   resetCharCount();
+  pendingFile = null;
   input.focus();
 });
 
@@ -176,8 +177,9 @@ copyBtn.addEventListener('click', async () => {
 });
 
 // --- Image drag & drop ---
-const inputWrap = document.querySelector('.input-wrap');
-const imgStatus = document.getElementById('img-status');
+const inputWrap  = document.querySelector('.input-wrap');
+const imgStatus  = document.getElementById('img-status');
+let pendingFile  = null;
 
 ['dragenter', 'dragover'].forEach(evt => {
   inputWrap.addEventListener(evt, e => {
@@ -195,20 +197,24 @@ inputWrap.addEventListener('drop', e => {
   inputWrap.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
   if (!file || !file.type.startsWith('image/')) return;
-  loadImageFile(file);
+  pendingFile = file;
+  uploadAndApply(file);
 });
 
-function loadImageFile(file) {
+function uploadAndApply(file) {
   inputWrap.classList.add('uploading');
-  setStatus('uploading...');
+  setStatus('give it a sec ...0%');
 
-  uploadToImgur(file)
+  const onProgress = pct => setStatus(`give it a sec ...${pct}%`);
+  const upload = uploadToImgur(file, onProgress);
+  const label  = 'imgur';
+
+  upload
     .then(url => {
-      setStatus('imgur');
+      setStatus(label);
       applyImage(url, URL.createObjectURL(file));
     })
     .catch(() => {
-      // Fallback: compress to tiny data URL
       const reader = new FileReader();
       reader.onload = ev => {
         const img = new Image();
@@ -224,19 +230,28 @@ function loadImageFile(file) {
     .finally(() => inputWrap.classList.remove('uploading'));
 }
 
-async function uploadToImgur(file) {
-  const fd = new FormData();
-  fd.append('image', file);
-  const res = await fetch('https://api.imgur.com/3/image', {
-    method: 'POST',
-    headers: { Authorization: 'Client-ID 546c25a59c58ad7' },
-    body: fd,
+function uploadToImgur(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.imgur.com/3/image');
+    xhr.setRequestHeader('Authorization', 'Client-ID 546c25a59c58ad7');
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const json = JSON.parse(xhr.responseText);
+        if (json.success) resolve(json.data.link);
+        else reject(new Error('upload failed'));
+      } catch { reject(new Error('upload failed')); }
+    };
+    xhr.onerror = () => reject(new Error('upload failed'));
+    xhr.send(fd);
   });
-  if (!res.ok) throw new Error('upload failed');
-  const json = await res.json();
-  if (!json.success) throw new Error('upload failed');
-  return json.data.link;
 }
+
 
 function applyImage(qrText, previewSrc) {
   input.value = qrText;
