@@ -21,6 +21,7 @@ const colorLight  = document.getElementById('color-light');
 const copyBtn     = document.getElementById('copy-btn');
 const dlPng       = document.getElementById('download-png');
 const dlSvg       = document.getElementById('download-svg');
+const imgPreview  = document.getElementById('img-preview');
 
 // --- Segmented controls ---
 document.querySelectorAll('#size-select .seg-btn').forEach(btn => {
@@ -52,6 +53,9 @@ input.addEventListener('input', () => {
 clearBtn.addEventListener('click', () => {
   input.value = '';
   charCount.textContent = 0;
+  imgPreview.hidden = true;
+  imgPreview.src = '';
+  setStatus('');
   input.focus();
 });
 
@@ -169,6 +173,100 @@ copyBtn.addEventListener('click', async () => {
     flash(copyBtn, 'Text copied');
   }
 });
+
+// --- Image drag & drop ---
+const inputWrap = document.querySelector('.input-wrap');
+const imgStatus = document.getElementById('img-status');
+
+['dragenter', 'dragover'].forEach(evt => {
+  inputWrap.addEventListener(evt, e => {
+    e.preventDefault();
+    if (e.dataTransfer.types.includes('Files')) inputWrap.classList.add('drag-over');
+  });
+});
+
+inputWrap.addEventListener('dragleave', e => {
+  if (!inputWrap.contains(e.relatedTarget)) inputWrap.classList.remove('drag-over');
+});
+
+inputWrap.addEventListener('drop', e => {
+  e.preventDefault();
+  inputWrap.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  loadImageFile(file);
+});
+
+function loadImageFile(file) {
+  inputWrap.classList.add('uploading');
+  setStatus('uploading...');
+
+  uploadToImgur(file)
+    .then(url => {
+      setStatus('imgur');
+      applyImage(url, URL.createObjectURL(file));
+    })
+    .catch(() => {
+      // Fallback: compress to tiny data URL
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const dataUrl = compressToDataUrl(img);
+          setStatus('offline – low quality');
+          applyImage(dataUrl, dataUrl);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    })
+    .finally(() => inputWrap.classList.remove('uploading'));
+}
+
+async function uploadToImgur(file) {
+  const fd = new FormData();
+  fd.append('image', file);
+  const res = await fetch('https://api.imgur.com/3/image', {
+    method: 'POST',
+    headers: { Authorization: 'Client-ID 546c25a59c58ad7' },
+    body: fd,
+  });
+  if (!res.ok) throw new Error('upload failed');
+  const json = await res.json();
+  if (!json.success) throw new Error('upload failed');
+  return json.data.link;
+}
+
+function applyImage(qrText, previewSrc) {
+  input.value = qrText;
+  charCount.textContent = qrText.length;
+  imgPreview.src = previewSrc;
+  imgPreview.hidden = false;
+  document.querySelectorAll('#ec-select .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.value === 'L');
+  });
+  state.ec = 'L';
+  generate();
+}
+
+function compressToDataUrl(img) {
+  const canvas = document.createElement('canvas');
+  const MAX_DIM = 96;
+  const scale = Math.min(MAX_DIM / img.width, MAX_DIM / img.height, 1);
+  canvas.width  = Math.round(img.width  * scale);
+  canvas.height = Math.round(img.height * scale);
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  for (let q = 0.6; q >= 0.05; q -= 0.05) {
+    const url = canvas.toDataURL('image/jpeg', q);
+    if (url.length <= 2900) return url;
+  }
+  return canvas.toDataURL('image/jpeg', 0.05);
+}
+
+function setStatus(msg) {
+  imgStatus.textContent = msg;
+  imgStatus.hidden = !msg;
+}
 
 // --- Helpers ---
 function flash(btn, label) {

@@ -18,8 +18,13 @@
 
     <section class="input-section">
       <div class="input-wrap">
-        <textarea id="input" placeholder="URL, text, anything..." spellcheck="false" rows="4"></textarea>
+        <div class="drop-hint">Drop image here</div>
+        <textarea id="input" placeholder="URL, text or upload an image through drag & drop" spellcheck="false" rows="4"></textarea>
         <div class="input-meta">
+          <span class="meta-left">
+            <img id="img-preview" hidden alt="">
+            <span id="img-status" hidden></span>
+          </span>
           <span id="char-count">0</span>
           <button id="clear-btn" title="Clear">✕</button>
         </div>
@@ -72,6 +77,8 @@
       </div>
     </section>
   </main>
+
+  <footer>alpwrk &mdash; from syntax to xperience</footer>
 
   <script src="app.js"></script>
 </body>
